@@ -50,7 +50,7 @@ int create_ciph_num_key(cipher, len, c_space) {  // create an array of character
 
 
 bool testExpression(guess) {
-    if (guess is in dictionary1) {  // <- THIS IS NOT HOW YOU DO THE THING.  SOMEONE ELSE DO THE THING
+    if (guess is in dictionary) {  // <- THIS IS NOT HOW YOU DO THE THING.  SOMEONE ELSE DO THE THING
         return false;}
     else {return true;}
 }
