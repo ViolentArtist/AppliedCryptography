@@ -17,7 +17,7 @@ def prep_trials(ciphertext):
 
 
 # Joon Hwang
-def index_of_coincidence(ciphertext):
+def index_of_coincidence_analysis(ciphertext):
     trials = prep_trials(ciphertext)
     iocs = []
     for i in range(len(trials)):
@@ -43,9 +43,27 @@ def index_of_coincidence(ciphertext):
     print(iocs)
 
 
-index_of_coincidence('gunfights outjuts molters forgot bedclothes cirrus servomotors tumulus incompleteness provoking '
-                     'sixteens breezeways layoff marinas directives teabowl vugs mainframe gazebo bushwhacks testers '
-                     'incompressibility unthoughtfully rivalled repaint nonuple guerre semiaquatic flashgun esthetics '
-                     'icefall touchups baltic baba gorget groper remittances nimbus podium reassurance preventable '
-                     'overroasts chests interchangeable pentarch doctoring potentiated salts overlay rustled '
-                     'recyclability version mottled lee')
+# Joon Hwang
+def chi_squared_analysis(ciphertext, key_length):
+    buckets = []
+    for i in range(key_length):
+        buckets.append([])
+
+    for i in range(len(ciphertext)):
+        buckets[i % key_length].append(ciphertext[i])
+
+    for bucket in buckets:
+        chi_squared = 0
+
+        freq_dict = {}
+        for char in bucket:
+            if char in freq_dict.keys():
+                freq_dict[char] += 1
+            else:
+                freq_dict[char] = 1
+
+        # INCOMPLETE: Here we have to calculate the chi squared value for different shift amounts for each bucket and
+        # pick the lowest as the key value. So for key length of 4, we get 4 buckets. We calculate the chi squared value
+        # of every character's frequency in that bucket versus the expected in the English language and sum. So within
+        # one bucket, we will have different chi squared values for every possible shift amount, the lowest being the
+        # (probable) actual shift amount
