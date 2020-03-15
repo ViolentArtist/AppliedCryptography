@@ -45,6 +45,10 @@ def index_of_coincidence_analysis(ciphertext):
 
 # Joon Hwang
 def chi_squared_analysis(ciphertext, key_length):
+    english_percents = {'a': 0.0855, 'b': 0.0160, 'c': 0.0316, 'd': 0.0387, 'e': 0.1210, 'f': 0.0218, 'g': 0.0209,
+                    'h': 0.0496, 'i': 0.0733, 'j': 0.0022, 'k': 0.0081, 'l': 0.0421, 'm': 0.0253, 'n': 0.0717,
+                    'o': 0.0747, 'p': 0.0207, 'q': 0.0010, 'r': 0.0633, 's': 0.0673, 't': 0.0894, 'u': 0.0268,
+                    'v': 0.0106, 'w': 0.0183, 'x': 0.0019, 'y': 0.0172, 'z': 0.0011}
     buckets = []
     for i in range(key_length):
         buckets.append([])
@@ -53,17 +57,19 @@ def chi_squared_analysis(ciphertext, key_length):
         buckets[i % key_length].append(ciphertext[i])
 
     for bucket in buckets:
-        chi_squared = 0
+        shift_buffer = bucket
+        for i in range(1, 26):
+            freq_dict = {}
+            chi_squared = 0
+            # shift shift_buffer by i
+            for char in shift_buffer:
+                if char in freq_dict.keys():
+                    freq_dict[char] += 1
+                else:
+                    freq_dict[char] = 1
 
-        freq_dict = {}
-        for char in bucket:
-            if char in freq_dict.keys():
-                freq_dict[char] += 1
-            else:
-                freq_dict[char] = 1
-
-        # INCOMPLETE: Here we have to calculate the chi squared value for different shift amounts for each bucket and
-        # pick the lowest as the key value. So for key length of 4, we get 4 buckets. We calculate the chi squared value
-        # of every character's frequency in that bucket versus the expected in the English language and sum. So within
-        # one bucket, we will have different chi squared values for every possible shift amount, the lowest being the
-        # (probable) actual shift amount
+            for char in freq_dict.keys():
+                char_chi_squared = ((freq_dict[char] - english_percents[char] * len(bucket)) ** 2) / \
+                                   (english_percents[char] * len(bucket))
+                chi_squared += char_chi_squared
+            print("chi squared value for shift of ", i, ": ", chi_squared)
