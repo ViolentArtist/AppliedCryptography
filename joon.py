@@ -17,6 +17,8 @@ def prep_trials(ciphertext):
 
 
 # Joon Hwang
+# returns the three top key lengths based on how similar the respective index of coincidence is to that of the English
+# language
 def index_of_coincidence_analysis(ciphertext):
     trials = prep_trials(ciphertext)
     iocs = []
@@ -36,32 +38,57 @@ def index_of_coincidence_analysis(ciphertext):
             ioc = 0
             N = len(bucket)
             for char in freq_dict:
-                ioc += (freq_dict[char] * (freq_dict[char] - 1)) / (N * (N - 1))
+                if N > 1:
+                    ioc += (freq_dict[char] * (freq_dict[char] - 1)) / (N * (N - 1))
             ioc_sum += ioc
         ioc_average = ioc_sum / t
         iocs.append((ioc_average, t))
-    print(iocs)
+    ioc_diffs = [(abs(ioc[0] - 0.06), ioc[1]) for ioc in iocs]
+    return sorted(ioc_diffs)[:3]
 
 
 # Joon Hwang
 def chi_squared_analysis(ciphertext, key_length):
-    english_percents = {'a': 0.0855, 'b': 0.0160, 'c': 0.0316, 'd': 0.0387, 'e': 0.1210, 'f': 0.0218, 'g': 0.0209,
-                    'h': 0.0496, 'i': 0.0733, 'j': 0.0022, 'k': 0.0081, 'l': 0.0421, 'm': 0.0253, 'n': 0.0717,
-                    'o': 0.0747, 'p': 0.0207, 'q': 0.0010, 'r': 0.0633, 's': 0.0673, 't': 0.0894, 'u': 0.0268,
-                    'v': 0.0106, 'w': 0.0183, 'x': 0.0019, 'y': 0.0172, 'z': 0.0011}
+    english_percents = {' ': 0.1829, 'a': 0.0653, 'b': 0.0126, 'c': 0.0223, 'd': 0.0328, 'e': 0.1027, 'f': 0.0198,
+                        'g': 0.0162, 'h': 0.0498, 'i': 0.0567, 'j': 0.0010, 'k': 0.0056, 'l': 0.0332, 'm': 0.0203,
+                        'n': 0.0571, 'o': 0.0616, 'p': 0.0150, 'q': 0.0008, 'r': 0.0499, 's': 0.0532, 't': 0.0752,
+                        'u': 0.0228, 'v': 0.0080, 'w': 0.0170, 'x': 0.0014, 'y': 0.0143, 'z': 0.0005}
     buckets = []
     for i in range(key_length):
         buckets.append([])
-
     for i in range(len(ciphertext)):
         buckets[i % key_length].append(ciphertext[i])
 
+    key = []
+    total_chi_squared = 0
     for bucket in buckets:
-        shift_buffer = bucket
-        for i in range(1, 26):
+        shift_buffer = ''
+        chi_buffer = []
+        for shift_amount in range(1, 26):
             freq_dict = {}
             chi_squared = 0
-            # shift shift_buffer by i
+            chi_shift = []
+
+            # shift by once every iteration to make things simple
+            if len(shift_buffer) == 0:
+                for char in bucket:
+                    if char == ' ':
+                        shift_buffer += 'a'
+                    elif char == 'z':
+                        shift_buffer += ' '
+                    else:
+                        shift_buffer += chr(ord(char) + 1)
+            else:
+                temp = ''
+                for char in shift_buffer:
+                    if char == ' ':
+                        temp += 'a'
+                    elif char == 'z':
+                        temp += ' '
+                    else:
+                        temp += chr(ord(char) + 1)
+                shift_buffer = temp
+
             for char in shift_buffer:
                 if char in freq_dict.keys():
                     freq_dict[char] += 1
@@ -72,4 +99,19 @@ def chi_squared_analysis(ciphertext, key_length):
                 char_chi_squared = ((freq_dict[char] - english_percents[char] * len(bucket)) ** 2) / \
                                    (english_percents[char] * len(bucket))
                 chi_squared += char_chi_squared
-            print("chi squared value for shift of ", i, ": ", chi_squared)
+
+            # record chi-squared values for different shift amounts
+            chi_buffer.append((chi_squared, shift_amount))
+        key.append(sorted(chi_buffer)[0][1])
+        total_chi_squared += sorted(chi_buffer)[0][0]
+    return key, total_chi_squared
+
+def main():
+    # input ciphertext
+    ciphertext = "sinbyqbenfbka ahdahqhz ajasdgkkkkkaskdkgi"
+    top_key_lengths = index_of_coincidence_analysis(ciphertext)
+    print("Probable keys and their associated chi-squared values")
+    for i in range(3):
+        print(chi_squared_analysis(ciphertext, top_key_lengths[i][1]))
+
+main()
